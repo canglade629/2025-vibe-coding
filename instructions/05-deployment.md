@@ -1,28 +1,14 @@
-## app.yaml
+## Create app.yaml for Databricks Deployment
 
-https://docs.databricks.com/aws/en/dev-tools/databricks-apps/app-runtime. Listen to my instructions and use my configurations if they differ from the article.
+### Step 1: Get Environment Variables
+Run this command to get your current environment variables:
+```bash
+python3 -c "import os; from dotenv import load_dotenv; load_dotenv(); print('DATABRICKS_HOST:', os.getenv('DATABRICKS_HOST')); print('DATABRICKS_CLIENT_ID:', os.getenv('DATABRICKS_CLIENT_ID')); print('DATABRICKS_CLIENT_SECRET:', os.getenv('DATABRICKS_CLIENT_SECRET')); print('LAKEBASE_INSTANCE_NAME:', os.getenv('LAKEBASE_INSTANCE_NAME')); print('LAKEBASE_DB_NAME:', os.getenv('LAKEBASE_DB_NAME')); print('MY_EMAIL:', os.getenv('MY_EMAIL'))"
+```
 
-This app will be deployed on Databricks. Create a Databricks `app.yaml` using the documentation. Use the docs to determine the command section - this is a FastAPI app, and our main file is called app.py.
+### Step 2: Create app.yaml
+Create `app.yaml` in the root directory with this exact format:
 
-**IMPORTANT**: The `command` must be formatted as a YAML sequence (array), not a single string.
-
-For the env section, include ALL variables used by this app and Lakebase:
-
--   DATABRICKS_HOST
--   LAKEBASE_INSTANCE_NAME
--   LAKEBASE_DB_NAME
--   MY_EMAIL
--   DATABRICKS_CLIENT_ID
--   DATABRICKS_CLIENT_SECRET
-
-**CRITICAL**: Include ALL environment variables from `.env` - missing any will cause database connection failures.
-
-Load the env vars from `.env` and add them here. They should be of this type:
-
--   name: {name of env var}
--   value: {value of env var}
-
-**Correct format example:**
 ```yaml
 command:
   - uvicorn
@@ -33,17 +19,21 @@ command:
   - 8000
 env:
   - name: DATABRICKS_HOST
-    value: https://your-databricks-host.com/
+    value: YOUR_DATABRICKS_HOST_FROM_STEP_1
   - name: LAKEBASE_INSTANCE_NAME
-    value: your-instance-name
+    value: YOUR_LAKEBASE_INSTANCE_FROM_STEP_1
   - name: LAKEBASE_DB_NAME
-    value: your-db-name
+    value: YOUR_LAKEBASE_DB_FROM_STEP_1
   - name: MY_EMAIL
-    value: your-email@databricks.com
+    value: YOUR_EMAIL_FROM_STEP_1
   - name: DATABRICKS_CLIENT_ID
-    value: your-client-id
+    value: YOUR_CLIENT_ID_FROM_STEP_1
   - name: DATABRICKS_CLIENT_SECRET
-    value: your-client-secret
+    value: YOUR_CLIENT_SECRET_FROM_STEP_1
 ```
 
-There should only be `command:` and `env:` sections.
+### Step 3: Important Notes
+- Replace `YOUR_*_FROM_STEP_1` with actual values from Step 1
+- Keep the YAML formatting exactly as shown
+- Only include `command:` and `env:` sections
+- **CRITICAL**: Use specific API paths like `/api/todos/list` instead of `/api/todos` to avoid Databricks routing issues
