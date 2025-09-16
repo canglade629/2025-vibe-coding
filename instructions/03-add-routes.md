@@ -74,6 +74,41 @@ Create a `lists_service.py` in the `/services` folder that exposes functions for
 
 The table is located at `<SCHEMA>.vibe_coding_lists` where `<SCHEMA>` is the derived schema from the user's email.
 
+#### Database Data Structure Fix
+
+**CRITICAL**: The lakebase service must return dictionaries instead of tuples to prevent `undefined` IDs in the frontend. Update the `lakebase.py` query method to convert database results:
+
+```python
+def query(self, sql: str):
+    """
+    Execute a SQL query and return the results as dictionaries.
+    Always calls both fetchall() and commit() for consistent behavior.
+    """
+    try:
+        self._ensure_connection()
+        
+        with self._connection.cursor() as cursor:
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            self._connection.commit()
+            
+            # Convert tuples to dictionaries using column names
+            columns = [desc[0] for desc in cursor.description] if cursor.description else []
+            return [dict(zip(columns, row)) for row in rows]
+    except Exception as e:
+        # Reset connection on error to force refresh on next query
+        if self._connection is not None:
+            try:
+                self._connection.close()
+            except:
+                pass
+        self._connection = None
+        self._connection_time = None
+        raise e
+```
+
+This ensures the frontend receives objects with named properties (id, title, description, etc.) instead of undefined values.
+
 ### Database Schema
 
 this is the structure of the table. you can assume it's already been created.
