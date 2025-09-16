@@ -89,12 +89,19 @@ def query(self, sql: str):
         
         with self._connection.cursor() as cursor:
             cursor.execute(sql)
-            rows = cursor.fetchall()
-            self._connection.commit()
             
-            # Convert tuples to dictionaries using column names
-            columns = [desc[0] for desc in cursor.description] if cursor.description else []
-            return [dict(zip(columns, row)) for row in rows]
+            # Only fetch results if there are any (for SELECT queries)
+            if cursor.description:
+                rows = cursor.fetchall()
+                self._connection.commit()
+                
+                # Convert tuples to dictionaries using column names
+                columns = [desc[0] for desc in cursor.description]
+                return [dict(zip(columns, row)) for row in rows]
+            else:
+                # For DDL/DML queries that don't return results
+                self._connection.commit()
+                return []
     except Exception as e:
         # Reset connection on error to force refresh on next query
         if self._connection is not None:
@@ -107,7 +114,7 @@ def query(self, sql: str):
         raise e
 ```
 
-This ensures the frontend receives objects with named properties (id, title, description, etc.) instead of undefined values.
+This ensures the frontend receives objects with named properties (id, title, description, etc.) instead of undefined values, and handles both SELECT queries and DDL/DML statements properly.
 
 ### Database Schema
 
